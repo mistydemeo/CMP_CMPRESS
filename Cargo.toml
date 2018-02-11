@@ -1,0 +1,8 @@
+[package]
+name = "sega_cmp"
+version = "0.1.0"
+authors = ["Misty De Meo <mistydemeo@gmail.com>"]
+build = "build.rs"
+
+[build-dependencies]
+cc = "1.0"
