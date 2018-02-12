@@ -68,3 +68,33 @@ pub fn compress(data: &[u8], size: Size) -> Result<&[u8], &str> {
 
     return Ok(out_data);
 }
+
+pub fn create_header(decompressed_size: i32, compression_type: Size) -> Vec<u8> {
+    let size_byte = match compression_type {
+        Size::Byte     => 0x0,
+        Size::Word     => 0x4,
+        Size::Longword => 0xC,
+    };
+
+    // First word is always the size indicator
+    let mut header : Vec<u8> = vec![0, size_byte];
+
+    // 32-bit header if size is larger than 65535 bytes
+    if decompressed_size > 65535 {
+        // One word of padding
+        header.push(0);
+        header.push(0);
+        // Size as 32-bit big endian
+        header.push(((decompressed_size >> 24) & 0xFF) as u8);
+        header.push(((decompressed_size >> 16) & 0xFF) as u8);
+        header.push(((decompressed_size >> 8) & 0xFF) as u8);
+        header.push((decompressed_size & 0xFF) as u8);
+    // 16-bit header otherwise
+    } else {
+        // Size as 16-bit big endian
+        header.push(((decompressed_size as i16 >> 8) & 0xFF) as u8);
+        header.push((decompressed_size as i16 & 0xFF) as u8);
+    }
+
+    return header;
+}
