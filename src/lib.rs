@@ -4,21 +4,50 @@ use std::ptr;
 extern crate libc;
 use libc::{c_int, intptr_t};
 
+pub enum Size {
+    Byte,
+    Word,
+    Longword,
+}
+
 extern {
     fn cmpr_8bit(data_stream: *const u8,
                  length: c_int,
                  data_out: *mut *mut u8,
                  compressed_size: *mut intptr_t) -> c_int;
+    fn cmpr_16bit(data_stream: *const u8,
+                  length: c_int,
+                  data_out: *mut *mut u8,
+                  compressed_size: *mut intptr_t) -> c_int;
+    fn cmpr_32bit(data_stream: *const u8,
+                  length: c_int,
+                  data_out: *mut *mut u8,
+                  compressed_size: *mut intptr_t) -> c_int;
 }
 
-pub fn compress_8bit(data: &[u8]) -> Result<&[u8], &str> {
+pub fn compress(data: &[u8], size: Size) -> Result<&[u8], &str> {
     let mut out = ptr::null_mut();
     let mut out_size : isize = 0;
 
     let result;
-    unsafe {
-        result = cmpr_8bit(data.as_ptr(), data.len() as c_int, &mut out as *mut _, &mut out_size);
-    };
+
+    match size {
+        Size::Byte => {
+            unsafe {
+                result = cmpr_8bit(data.as_ptr(), data.len() as c_int, &mut out as *mut _, &mut out_size);
+            };
+        },
+        Size::Word => {
+            unsafe {
+                result = cmpr_16bit(data.as_ptr(), data.len() as c_int / 2, &mut out as *mut _, &mut out_size);
+            };
+        },
+        Size::Longword => {
+            unsafe {
+                result = cmpr_32bit(data.as_ptr(), data.len() as c_int / 4, &mut out as *mut _, &mut out_size);
+            };
+        }
+    }
 
     let out_data;
     unsafe {
