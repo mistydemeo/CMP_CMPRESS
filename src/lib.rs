@@ -38,11 +38,17 @@ pub fn compress(data: &[u8], size: Size) -> Result<&[u8], &str> {
             };
         },
         Size::Word => {
+            if data.len() % 2 != 0 {
+                return Err("Provided buffer is not an even multiple of 16 bits");
+            }
             unsafe {
                 result = cmpr_16bit(data.as_ptr(), data.len() as c_int / 2, &mut out as *mut _, &mut out_size);
             };
         },
         Size::Longword => {
+            if data.len() % 4 != 0 {
+                return Err("Provided buffer is not an even multiple of 32 bits");
+            }
             unsafe {
                 result = cmpr_32bit(data.as_ptr(), data.len() as c_int / 4, &mut out as *mut _, &mut out_size);
             };
