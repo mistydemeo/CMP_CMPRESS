@@ -34,6 +34,7 @@ use libc::{c_int, intptr_t};
 /// Used to denote the width of data to compress.
 /// Because CMP compression was created to be used on the SH-2 CPU, the size names
 /// come from the three sizes of data used on the SH-2.
+#[derive(Copy, Clone)]
 pub enum Size {
     /// 8-bit
     Byte,
