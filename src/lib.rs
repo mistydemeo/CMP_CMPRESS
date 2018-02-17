@@ -23,6 +23,8 @@
 //! and the data-creating `compress`. Most Saturn games store both in the same place,
 //! with the header followed immedaitely by the compressed data.
 
+use std::error::Error;
+use std::fmt;
 use std::slice;
 use std::ptr;
 
@@ -39,6 +41,31 @@ pub enum Size {
     Word,
     /// 32-bit
     Longword,
+}
+
+#[derive(Debug)]
+pub struct CompressionError {
+    message: &'static str,
+}
+
+impl CompressionError {
+    fn new(message: &'static str) -> CompressionError {
+        return CompressionError {
+            message: message,
+        }
+    }
+}
+
+impl Error for CompressionError {
+    fn description(&self) -> &str {
+        return self.message;
+    }
+}
+
+impl fmt::Display for CompressionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
 }
 
 extern {
@@ -64,7 +91,7 @@ extern {
 /// Because this wraps a set of C functions, errors will be returned if the underlying
 /// functions return an error; information about why the error occurred may be available
 /// via stderr.
-pub fn compress(data: &[u8], size: Size) -> Result<Vec<u8>, &str> {
+pub fn compress(data: &[u8], size: Size) -> Result<Vec<u8>, CompressionError> {
     let mut out = ptr::null_mut();
     let mut out_size : isize = 0;
 
@@ -78,7 +105,7 @@ pub fn compress(data: &[u8], size: Size) -> Result<Vec<u8>, &str> {
         },
         Size::Word => {
             if data.len() % 2 != 0 {
-                return Err("Provided buffer is not an even multiple of 16 bits");
+                return Err(CompressionError::new("Provided buffer is not an even multiple of 16 bits"));
             }
             unsafe {
                 result = cmpr_16bit(data.as_ptr(), data.len() as c_int / 2, &mut out as *mut _, &mut out_size);
@@ -86,7 +113,7 @@ pub fn compress(data: &[u8], size: Size) -> Result<Vec<u8>, &str> {
         },
         Size::Longword => {
             if data.len() % 4 != 0 {
-                return Err("Provided buffer is not an even multiple of 32 bits");
+                return Err(CompressionError::new("Provided buffer is not an even multiple of 32 bits"));
             }
             unsafe {
                 result = cmpr_32bit(data.as_ptr(), data.len() as c_int / 4, &mut out as *mut _, &mut out_size);
@@ -102,7 +129,7 @@ pub fn compress(data: &[u8], size: Size) -> Result<Vec<u8>, &str> {
     assert_eq!(out_size as c_int, out_data.len() as c_int); 
 
     if result != 0 {
-        return Err("Unable to compress data!");
+        return Err(CompressionError::new("Unable to compress data!"));
     }
 
     let out_vec = Vec::from(out_data);
