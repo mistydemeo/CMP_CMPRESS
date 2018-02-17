@@ -6,7 +6,11 @@ authors = [
     "MrConan1",
 ]
 license = "LGPL-3.0-only"
+description = "Library to compress data using Sega's CMP format"
+homepage = "https://github.com/studio-lucia/sega_cmp"
+repository = "https://github.com/studio-lucia/sega_cmp"
 build = "build.rs"
+include = ["src/lib.rs", "Cargo.toml", "build.rs", "compress_rtns.*"]
 
 [build-dependencies]
 cc = "1.0"
