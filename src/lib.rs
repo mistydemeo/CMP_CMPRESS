@@ -14,7 +14,7 @@
 //! Sega included CMP in the official Saturn SDK; they provided a closed-source
 //! commandline tool to compress data and source code to do compression from
 //! within games. As a result, many games used it for data with lots of repetitive
-//! data such as text and graphics.
+//! content such as text and graphics.
 //! This crate's CMP implementation aims to be 100% compatible with the original
 //! decoder; it produces identical compressed data to the original encoder.
 //! Its output has been tested to work in commercial Saturn games which use CMP.
