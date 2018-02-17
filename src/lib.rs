@@ -64,7 +64,7 @@ extern {
 /// Because this wraps a set of C functions, errors will be returned if the underlying
 /// functions return an error; information about why the error occurred may be available
 /// via stderr.
-pub fn compress(data: &[u8], size: Size) -> Result<&[u8], &str> {
+pub fn compress(data: &[u8], size: Size) -> Result<Vec<u8>, &str> {
     let mut out = ptr::null_mut();
     let mut out_size : isize = 0;
 
@@ -105,7 +105,8 @@ pub fn compress(data: &[u8], size: Size) -> Result<&[u8], &str> {
         return Err("Unable to compress data!");
     }
 
-    return Ok(out_data);
+    let out_vec = Vec::from(out_data);
+    return Ok(out_vec);
 }
 
 /// Writes a CMP header; this header is expected to come at the beginning of a compressed CMP stream.
