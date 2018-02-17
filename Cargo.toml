@@ -5,6 +5,7 @@ authors = [
     "Misty De Meo <mistydemeo@gmail.com>",
     "MrConan1",
 ]
+license = "LGPL-3.0-only"
 build = "build.rs"
 
 [build-dependencies]
