@@ -4,9 +4,15 @@ use std::ptr;
 extern crate libc;
 use libc::{c_int, intptr_t};
 
+/// Used to denote the width of data to compress.
+/// Because CMP compression was created to be used on the SH-2 CPU, the size names
+/// come from the three sizes of data used on the SH-2.
 pub enum Size {
+    /// 8-bit
     Byte,
+    /// 16-bit
     Word,
+    /// 32-bit
     Longword,
 }
 
@@ -25,6 +31,14 @@ extern {
                   compressed_size: *mut intptr_t) -> c_int;
 }
 
+/// Given a slice containing `u8`s, this function compresses the data in increments of `size`.
+/// On success, returns a slice containing the compressed data.
+///
+/// When compressing in increments of word or longword, this function will return an error
+/// if the provided data isn't an even increment of that data type.
+/// Because this wraps a set of C functions, errors will be returned if the underlying
+/// functions return an error; information about why the error occurred may be available
+/// via stderr.
 pub fn compress(data: &[u8], size: Size) -> Result<&[u8], &str> {
     let mut out = ptr::null_mut();
     let mut out_size : isize = 0;
@@ -69,6 +83,10 @@ pub fn compress(data: &[u8], size: Size) -> Result<&[u8], &str> {
     return Ok(out_data);
 }
 
+/// Writes a CMP header; this header is expected to come at the beginning of a compressed CMP stream.
+///
+/// `decompressed_size` is the size of the slice passed to `compress`,
+/// while `compression_type` is the same value passed to `compress`.
 pub fn create_header(decompressed_size: i32, compression_type: Size) -> Vec<u8> {
     let size_byte = match compression_type {
         Size::Byte     => 0x0,
