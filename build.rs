@@ -1,4 +1,4 @@
-// build.rs
+// Builds the C component of the crate
 
 extern crate cc;
 
