@@ -1,7 +1,10 @@
 [package]
 name = "sega_cmp"
 version = "0.1.0"
-authors = ["Misty De Meo <mistydemeo@gmail.com>"]
+authors = [
+    "Misty De Meo <mistydemeo@gmail.com>",
+    "MrConan1",
+]
 build = "build.rs"
 
 [build-dependencies]
