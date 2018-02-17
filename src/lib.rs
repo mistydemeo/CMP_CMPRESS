@@ -1,3 +1,28 @@
+//! This crate provides support for compressing files using Sega's CMP
+//! run-length encoding scheme, which was used in games for the
+//! Sega Saturn game console.
+//!
+//! [Run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding)
+//! is a simple kind of compression which works by analyzing data for repetitive
+//! sequences of data (or "runs"); any repeating sequences can be replaced by
+//! commands to repeat X data N times.
+//!
+//! For example, imagine the text `AAAAAAAABBBBAABA`.
+//! If you described it in terms of patterns, you could think of it as being
+//! `8A4B2A1B1A` - which takes up 10 bytes instead of 16.
+//!
+//! Sega included CMP in the official Saturn SDK; they provided a closed-source
+//! commandline tool to compress data and source code to do compression from
+//! within games. As a result, many games used it for data with lots of repetitive
+//! data such as text and graphics.
+//! This crate's CMP implementation aims to be 100% compatible with the original
+//! decoder; it produces identical compressed data to the original encoder.
+//! Its output has been tested to work in commercial Saturn games which use CMP.
+//!
+//! This crate provides two basic functions: the header-generating `create_header`,
+//! and the data-creating `compress`. Most Saturn games store both in the same place,
+//! with the header followed immedaitely by the compressed data.
+
 use std::slice;
 use std::ptr;
 
