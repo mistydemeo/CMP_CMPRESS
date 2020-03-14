@@ -28,7 +28,6 @@ use std::fmt;
 use std::slice;
 use std::ptr;
 
-extern crate libc;
 use libc::{c_int, intptr_t};
 
 /// Used to denote the width of data to compress.
