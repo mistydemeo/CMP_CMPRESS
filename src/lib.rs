@@ -25,8 +25,8 @@
 
 use std::error::Error;
 use std::fmt;
-use std::slice;
 use std::ptr;
+use std::slice;
 
 use libc::{c_int, intptr_t};
 
@@ -50,9 +50,7 @@ pub struct CompressionError {
 
 impl CompressionError {
     fn new(message: &'static str) -> CompressionError {
-        return CompressionError {
-            message: message,
-        }
+        return CompressionError { message: message };
     }
 }
 
@@ -68,19 +66,25 @@ impl fmt::Display for CompressionError {
     }
 }
 
-extern {
-    fn cmpr_8bit(data_stream: *const u8,
-                 length: c_int,
-                 data_out: *mut *mut u8,
-                 compressed_size: *mut intptr_t) -> c_int;
-    fn cmpr_16bit(data_stream: *const u8,
-                  length: c_int,
-                  data_out: *mut *mut u8,
-                  compressed_size: *mut intptr_t) -> c_int;
-    fn cmpr_32bit(data_stream: *const u8,
-                  length: c_int,
-                  data_out: *mut *mut u8,
-                  compressed_size: *mut intptr_t) -> c_int;
+extern "C" {
+    fn cmpr_8bit(
+        data_stream: *const u8,
+        length: c_int,
+        data_out: *mut *mut u8,
+        compressed_size: *mut intptr_t,
+    ) -> c_int;
+    fn cmpr_16bit(
+        data_stream: *const u8,
+        length: c_int,
+        data_out: *mut *mut u8,
+        compressed_size: *mut intptr_t,
+    ) -> c_int;
+    fn cmpr_32bit(
+        data_stream: *const u8,
+        length: c_int,
+        data_out: *mut *mut u8,
+        compressed_size: *mut intptr_t,
+    ) -> c_int;
 }
 
 /// Given a slice containing `u8`s, this function compresses the data in increments of `size`.
@@ -93,40 +97,57 @@ extern {
 /// via stderr.
 pub fn compress(data: &[u8], size: Size) -> Result<Vec<u8>, CompressionError> {
     let mut out = ptr::null_mut();
-    let mut out_size : isize = 0;
+    let mut out_size: isize = 0;
 
     let result;
 
     match size {
         Size::Byte => {
             unsafe {
-                result = cmpr_8bit(data.as_ptr(), data.len() as c_int, &mut out as *mut _, &mut out_size);
+                result = cmpr_8bit(
+                    data.as_ptr(),
+                    data.len() as c_int,
+                    &mut out as *mut _,
+                    &mut out_size,
+                );
             };
-        },
+        }
         Size::Word => {
             if data.len() % 2 != 0 {
-                return Err(CompressionError::new("Provided buffer is not an even multiple of 16 bits"));
+                return Err(CompressionError::new(
+                    "Provided buffer is not an even multiple of 16 bits",
+                ));
             }
             unsafe {
-                result = cmpr_16bit(data.as_ptr(), data.len() as c_int / 2, &mut out as *mut _, &mut out_size);
+                result = cmpr_16bit(
+                    data.as_ptr(),
+                    data.len() as c_int / 2,
+                    &mut out as *mut _,
+                    &mut out_size,
+                );
             };
-        },
+        }
         Size::Longword => {
             if data.len() % 4 != 0 {
-                return Err(CompressionError::new("Provided buffer is not an even multiple of 32 bits"));
+                return Err(CompressionError::new(
+                    "Provided buffer is not an even multiple of 32 bits",
+                ));
             }
             unsafe {
-                result = cmpr_32bit(data.as_ptr(), data.len() as c_int / 4, &mut out as *mut _, &mut out_size);
+                result = cmpr_32bit(
+                    data.as_ptr(),
+                    data.len() as c_int / 4,
+                    &mut out as *mut _,
+                    &mut out_size,
+                );
             };
         }
     }
 
     let out_data;
-    unsafe {
-        out_data = slice::from_raw_parts(out, out_size as usize)
-    };
+    unsafe { out_data = slice::from_raw_parts(out, out_size as usize) };
 
-    assert_eq!(out_size as c_int, out_data.len() as c_int); 
+    assert_eq!(out_size as c_int, out_data.len() as c_int);
 
     if result != 0 {
         return Err(CompressionError::new("Unable to compress data!"));
@@ -142,13 +163,13 @@ pub fn compress(data: &[u8], size: Size) -> Result<Vec<u8>, CompressionError> {
 /// while `compression_type` is the same value passed to `compress`.
 pub fn create_header(decompressed_size: i32, compression_type: Size) -> Vec<u8> {
     let size_byte = match compression_type {
-        Size::Byte     => 0x0,
-        Size::Word     => 0x4,
+        Size::Byte => 0x0,
+        Size::Word => 0x4,
         Size::Longword => 0xC,
     };
 
     // First word is always the size indicator
-    let mut header : Vec<u8> = vec![0, size_byte];
+    let mut header: Vec<u8> = vec![0, size_byte];
 
     // 32-bit header if size is larger than 65535 bytes
     if decompressed_size > 65535 {
